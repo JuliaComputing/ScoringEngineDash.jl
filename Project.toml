@@ -1,0 +1,13 @@
+name = "ScoringEngineDash"
+uuid = "a5a95916-cc5d-4bc9-9b89-78364cfe7a62"
+authors = ["jeremie.db <jeremie.db@evovest.com>"]
+version = "0.1.0"
+
+[deps]
+Dash = "1b08a953-4be3-4667-9a23-3db579824955"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+JSONTables = "b9914132-a727-11e9-1322-f18e41205b0b"
+PlotlyJS = "f0f68f2c-4968-5e81-91da-67840de0976a"
+ShapML = "8523bd24-6f66-414b-9e1e-b02db3916d64"
+UrlDownload = "856ac37a-3032-4c1c-9122-f86d88358c8b"
