@@ -176,4 +176,4 @@ callback!(
         ))
 end
 
-run_server(app, "127.0.0.1", 80, debug = true)
+run_server(app, "0.0.0.0", 80, debug = true)
