@@ -1,19 +1,21 @@
 using Dash, PlotlyJS
 using HTTP
 using CSV, JSON3, JSONTables, DataFrames
+using Random
 using Statistics: mean, std
 using StatsBase: sample
 using ShapML
 using Loess
 
-df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
+const scoring_url = "http://localhost:8008/api/v1/risk"
 
-sample_size = 20
-features = ["pol_no_claims_discount", "pol_coverage", "pol_duration", "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population", "town_surface_area", "drv_sex1", "drv_age1", "pol_pay_freq"]
+const df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
+const sample_size = 20
+const features = ["pol_no_claims_discount", "pol_coverage", "pol_duration", "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population", "town_surface_area", "drv_sex1", "drv_age1", "pol_pay_freq"]
 
 function get_scores(df::DataFrame)
     body = JSON3.write(arraytable(df))
-    req = HTTP.request("POST", "http://localhost:8008/api/v1/risk", [], body)
+    req = HTTP.request("POST", scoring_url, [], body)
     res = JSON3.read(req.body, Dict)
     flux = Float64.(res["score_flux"])
     gbt = Float64.(res["score_gbt"])
@@ -176,4 +178,5 @@ callback!(
         ))
 end
 
+run_server(app, "127.0.0.1", 80, debug = true)
 run_server(app, "0.0.0.0", 80, debug = true)
