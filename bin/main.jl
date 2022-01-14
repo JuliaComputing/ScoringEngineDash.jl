@@ -7,7 +7,8 @@ using StatsBase: sample
 using ShapML
 using Loess
 
-const scoring_url = "http://localhost:8008/api/v1/risk"
+# const scoring_url = "http://localhost:8008/api/v1/risk"
+const scoring_url = get(ENV, "SCORING_URL", "http://localhost:8008/api/v1/risk")
 
 const df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
 const sample_size = 20
@@ -178,5 +179,5 @@ callback!(
         ))
 end
 
-run_server(app, "127.0.0.1", 80, debug = true)
+# run_server(app, "127.0.0.1", 80, debug = true)
 run_server(app, "0.0.0.0", 80, debug = true)
