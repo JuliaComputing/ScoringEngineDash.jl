@@ -10,9 +10,21 @@ using Loess
 # const scoring_url = "http://localhost:8008/api/v1/risk"
 const scoring_url = get(ENV, "SCORING_URL", "http://localhost:8008/api/v1/risk")
 
-const df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
+const df_tot =  begin 
+    df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
+    dropmissing!(df_tot)
+end
+
 const sample_size = 20
-const features = ["pol_no_claims_discount", "pol_coverage", "pol_duration", "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population", "town_surface_area", "drv_sex1", "drv_age1", "pol_pay_freq"]
+
+# features to be passed to shap function
+const features_importance = ["pol_no_claims_discount", "pol_coverage", "pol_duration", "pol_sit_duration", 
+    "vh_value", "vh_weight", "vh_age", "population", "town_surface_area", "drv_sex1", "drv_age1", 
+    "pol_pay_freq"]
+
+# available features for one-way effect - only numeric features ATM
+const features_effect = ["pol_no_claims_discount", "pol_duration", "pol_sit_duration", "vh_value", "vh_weight", "vh_age", 
+    "population", "town_surface_area", "drv_age1"]
 
 function get_scores(df::DataFrame)
     body = JSON3.write(arraytable(df))
@@ -40,7 +52,7 @@ function run_shap(df, model = :flux)
     data_shap = ShapML.shap(
         explain = copy(df),
         reference = copy(df),
-        target_features = features,
+        target_features = features_importance,
         model = model,
         predict_function = pred_shap,
         sample_size = sample_size,
@@ -51,7 +63,7 @@ end
 function plot_shap(data_shap, feat = "vh_age")
     df = data_shap[data_shap.feature_name.==feat, :]
     transform!(df, :feature_value => ByRow(x -> convert(Float64, x)) => :feature_value)
-    model = loess(df[:, :feature_value], df[:, :shap_effect], span = 0.5)
+    model = loess(df[:, :feature_value], df[:, :shap_effect], span = 1.0)
     smooth_x = range(extrema(df[:, :feature_value])...; length = 10)
     smooth_y = Loess.predict(model, smooth_x)
     return (df = df, smooth_x = smooth_x, smooth_y = smooth_y)
@@ -75,7 +87,7 @@ app.layout = html_div(className = "p-5") do
             html_p("Select Feature"),
             html_div(dcc_dropdown(
                 id = "xaxis-column",
-                options = [(label = i, value = i) for i in features],
+                options = [(label = i, value = i) for i in features_effect],
                 value = "vh_age"), className = "col-md-4"),
             html_div(html_button("Update Sample!", id = "btn-1"), className = "py-3")
         ], className = "col-md-12"),
@@ -114,7 +126,7 @@ callback!(
                 scatter(x = shap_gbt[:df][:, :feature_value], y = shap_gbt[:df][:, :shap_effect], mode = "markers", marker = attr(color = "green", opacity = 0.5, size = 12), name="gbt"),
                 scatter(x = shap_gbt[:smooth_x], y = shap_gbt[:smooth_y], mode = "lines", marker = attr(color = "blue", size = 12), name="gbt")],
             Layout(
-                title = "Flux vs GBT predictions",
+                title = "Flux vs GBT $xaxis_column_name effects",
                 plot_bgcolor = "white",
                 paper_bgcolor = nothing,
                 xaxis = attr(
