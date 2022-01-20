@@ -1,4 +1,4 @@
-using Dash, PlotlyJS
+using Dash, PlotlyBase
 using HTTP
 using CSV, JSON3, JSONTables, DataFrames
 using Random
@@ -118,7 +118,7 @@ callback!(
     feat_gbt = get_feat_importance(data_gbt)
     shap_gbt = plot_shap(data_gbt, xaxis_column_name)
 
-    println("ids: ", ids)
+    # println("ids: ", ids)
 
     return (Plot(
             [scatter(x = shap_flux[:df][:, :feature_value], y = shap_flux[:df][:, :shap_effect], mode = "markers", marker = attr(color = "red", opacity = 0.5, size = 12), name="flux"),
