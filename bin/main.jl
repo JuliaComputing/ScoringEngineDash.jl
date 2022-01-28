@@ -7,8 +7,8 @@ using StatsBase: sample
 using ShapML
 using Loess
 
-# const scoring_url = "http://localhost:8008/api/v1/risk"
-const scoring_url = get(ENV, "SCORING_URL", "http://localhost:8008/api/v1/risk")
+const url_base = "http://localhost:8008/api/v1"
+# const url_base = get(ENV, "SCORING_URL", "$(url_base)/flux")
 
 const df_tot =  begin 
     df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
@@ -18,37 +18,38 @@ end
 const sample_size = 20
 
 # features to be passed to shap function
-const features_importance = ["pol_no_claims_discount", "pol_coverage", "pol_duration", "pol_sit_duration", 
-    "vh_value", "vh_weight", "vh_age", "population", "town_surface_area", "drv_sex1", "drv_age1", 
-    "pol_pay_freq"]
+const features_importance = ["pol_no_claims_discount", "pol_coverage", "pol_duration", 
+    "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population", 
+    "town_surface_area", "drv_sex1", "drv_age1", "pol_pay_freq"]
 
 # available features for one-way effect - only numeric features ATM
-const features_effect = ["pol_no_claims_discount", "pol_duration", "pol_sit_duration", "vh_value", "vh_weight", "vh_age", 
-    "population", "town_surface_area", "drv_age1"]
+const features_effect = ["pol_no_claims_discount", "pol_duration", "pol_sit_duration", "vh_value", 
+    "vh_weight", "vh_age", "population", "town_surface_area", "drv_age1"]
 
-function get_scores(df::DataFrame)
+function get_scores(df::DataFrame, model)
     body = JSON3.write(arraytable(df))
-    req = HTTP.request("POST", scoring_url, [], body)
+    endpoint = "$(url_base)/$(model)"
+    req = HTTP.request("POST", endpoint, [], body)
     res = JSON3.read(req.body, Dict)
-    flux = Float64.(res["score_flux"])
-    gbt = Float64.(res["score_gbt"])
-    return (flux = flux, gbt = gbt)
+    scores = Float64.(res["score"])
+    return scores
 end
 
 function add_scores!(df::DataFrame)
-    scores = get_scores(df)
-    df[:, :flux] .= scores[:flux]
-    df[:, :gbt] .= scores[:gbt]
+    scores_flux = get_scores(df, "flux")
+    scores_gbt = get_scores(df, "gbt")
+    df[:, :flux] .= scores_flux
+    df[:, :gbt] .= scores_gbt
     return nothing
 end
 
 function pred_shap(model, df)
-    pred = get_scores(df::DataFrame)
-    pred_df = DataFrame(score = pred[model])
+    scores = get_scores(df::DataFrame, model)
+    pred_df = DataFrame(score = scores)
     return pred_df
 end
 
-function run_shap(df, model = :flux)
+function run_shap(df, model = "flux")
     data_shap = ShapML.shap(
         explain = copy(df),
         reference = copy(df),
@@ -80,6 +81,7 @@ years = unique(df_tot[!, "year"])
 rng = Random.MersenneTwister(123)
 
 app = dash(external_stylesheets = ["https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"])
+# app = dash()
 
 app.layout = html_div(className = "p-5") do
     html_h3("Scoring Engine - Model Exploration Dashboard"),
@@ -110,11 +112,11 @@ callback!(
     ids = sample(rng, 1:nrow(df_tot), 20, replace = false, ordered = true)
     df = df_tot[ids, :]
     add_scores!(df)
-    data_flux = run_shap(df, :flux)
+    data_flux = run_shap(df, "flux")
     feat_flux = get_feat_importance(data_flux)
     shap_flux = plot_shap(data_flux, xaxis_column_name)
 
-    data_gbt = run_shap(df, :gbt)
+    data_gbt = run_shap(df, "gbt")
     feat_gbt = get_feat_importance(data_gbt)
     shap_gbt = plot_shap(data_gbt, xaxis_column_name)
 
