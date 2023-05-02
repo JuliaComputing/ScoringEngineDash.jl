@@ -12,7 +12,7 @@ const url_base = "http://localhost:8008/api/v1"
 
 @info "dir ::" readdir("/home/jrun/.julia/packages/ScoringEngineDash")
 const df_tot =  begin
-    df_tot = CSV.read(joinpath("/home/jrun/.julia/packages/ScoringEngineDash/*/data", "training_data.csv"), DataFrame)
+    df_tot = CSV.read(joinpath("/home/jrun/.julia/packages/ScoringEngineDash/dTdIy/data", "training_data.csv"), DataFrame)
     ## df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
     dropmissing!(df_tot)
 end
