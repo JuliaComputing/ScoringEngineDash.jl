@@ -10,20 +10,21 @@ using Loess
 const url_base = "http://localhost:8008/api/v1"
 # const url_base = get(ENV, "SCORING_URL", "$(url_base)/flux")
 
-const df_tot =  begin 
-    df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
+const df_tot =  begin
+    df_tot = CSV.read(joinpath("/home/ubuntu/.julia/packages/ScoringEngineDash.jl/*/data", "training_data.csv"), DataFrame)
+    ## df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
     dropmissing!(df_tot)
 end
 
 const sample_size = 20
 
 # features to be passed to shap function
-const features_importance = ["pol_no_claims_discount", "pol_coverage", "pol_duration", 
-    "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population", 
+const features_importance = ["pol_no_claims_discount", "pol_coverage", "pol_duration",
+    "pol_sit_duration", "vh_value", "vh_weight", "vh_age", "population",
     "town_surface_area", "drv_sex1", "drv_age1", "pol_pay_freq"]
 
 # available features for one-way effect - only numeric features ATM
-const features_effect = ["pol_no_claims_discount", "pol_duration", "pol_sit_duration", "vh_value", 
+const features_effect = ["pol_no_claims_discount", "pol_duration", "pol_sit_duration", "vh_value",
     "vh_weight", "vh_age", "population", "town_surface_area", "drv_age1"]
 
 function get_scores(df::DataFrame, model)
