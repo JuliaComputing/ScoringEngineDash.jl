@@ -9,7 +9,7 @@ using Loess
 
 using ScoringEngineDash
 
-pkgpath = pathof(ScoringEngineDash)
+pkgpath = split(pathof(ScoringEngineDash), ".jl")[1]
 
 const url_base = "http://localhost:8008/api/v1"
 # const url_base = get(ENV, "SCORING_URL", "$(url_base)/flux")
