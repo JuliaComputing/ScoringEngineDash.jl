@@ -10,6 +10,7 @@ using Loess
 const url_base = "http://localhost:8008/api/v1"
 # const url_base = get(ENV, "SCORING_URL", "$(url_base)/flux")
 
+@info "dir ::" readdir("/home/ubuntu/.julia/packages/ScoringEngineDash.jl")
 const df_tot =  begin
     df_tot = CSV.read(joinpath("/home/ubuntu/.julia/packages/ScoringEngineDash.jl/*/data", "training_data.csv"), DataFrame)
     ## df_tot = CSV.read(joinpath(@__DIR__, "../data", "training_data.csv"), DataFrame)
